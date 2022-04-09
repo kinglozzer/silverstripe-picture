@@ -1,0 +1,6 @@
+---
+Name: silverstripe-picture
+---
+SilverStripe\Assets\Image:
+  extensions:
+    - Kinglozzer\SilverstripePicture\ImageExtension
