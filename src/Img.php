@@ -3,100 +3,59 @@
 namespace Kinglozzer\SilverstripePicture;
 
 use SilverStripe\Assets\Image;
-use SilverStripe\View\HTML;
 use SilverStripe\View\ViewableData;
 
 class Img extends ViewableData
 {
-    protected Image $sourceImage;
+    use SrcsetProviderTrait {
+        __construct as __srcsetProviderConstruct;
+        __call as __srcsetProviderCall;
+    }
 
+    /**
+     * The default image for this <picture> element, to be rendered as a nested <img /> tag
+     */
     protected Image $defaultImage;
 
-    protected array $config;
-
-    protected array $imageCandidates = [];
-
+    /**
+     * A store of any manipulations performed on the default image
+     */
     protected array $defaultImageManipulations = [];
 
     public function __construct(Image $sourceImage, array $config)
     {
-        $this->sourceImage = $sourceImage;
-        $this->defaultImage = $this->sourceImage;
-        $this->config = $config;
-        $this->prepareImageCandidates();
+        parent::__construct();
+        $this->__srcsetProviderConstruct($sourceImage, $config);
+        $this->defaultImage = $sourceImage;
     }
 
-    public function hasMethod($method)
-    {
-        return parent::hasMethod($method) || $this->sourceImage->hasMethod($method);
-    }
-
+    /**
+     * For the default Img tag, we ensure that any requested manipulation is also called against the
+     * default image that will become the "src", not just the srcset attribute image candidates
+     */
     public function __call($method, $arguments)
     {
-        foreach ($this->imageCandidates as &$imageCandidate) {
-            /** @var Image $image */
-            $image = $imageCandidate['image'];
-            $imageCandidate['image'] = $image->$method(...$arguments);
-            $imageCandidate['manipulations'][] = [
-                'method' => $method,
-                'arguments' => $arguments
-            ];
-        }
-
         $this->defaultImage = $this->defaultImage->$method(...$arguments);
         $this->defaultImageManipulations[] = [
             'method' => $method,
             'arguments' => $arguments
         ];
 
-        return $this;
+        return $this->__srcsetProviderCall($method, $arguments);
     }
 
-    protected function prepareImageCandidates()
+    /**
+     * For the default <img> tag, we re-use the existing Silverstripe Image object and inject a srcset attribute
+     */
+    public function forTemplate(): string
     {
-        foreach ($this->config as $config) {
-            $manipulations = $config['manipulations'] ?? [$config];
-            $descriptor = $config['descriptor'] ?? '';
-            $image = $this->sourceImage;
-            foreach ($manipulations as $manipulation) {
-                $method = $manipulation['method'];
-                $arguments = $manipulation['arguments'];
-                $image = $image->$method(...$arguments);
-            }
-
-            $this->imageCandidates[] = [
-                'manipulations' => $manipulations,
-                'image' => $image,
-                'descriptor' => $descriptor
-            ];
-        }
-    }
-
-    public function forTemplate()
-    {
-        $attributes = [];
-
-        $firstImage = null;
-        $srcsetCandidates = [];
-        foreach ($this->imageCandidates as $imageCandidate) {
-            /** @var Image $image */
-            $image = $imageCandidate['image'];
-            if (!$firstImage) {
-                $firstImage = $image;
-            }
-
-            $srcsetCandidate = $image->getUrl();
-            if ($imageCandidate['descriptor']) {
-                $srcsetCandidate = "{$srcsetCandidate} {$imageCandidate['descriptor']}";
-            }
-            $srcsetCandidates[] = $srcsetCandidate;
-        }
-
-        $attributes['srcset'] = implode(', ', $srcsetCandidates);
+        $attributes = [
+            'srcset' => $this->getImageCandidatesString()
+        ];
 
         $this->extend('updateAttributes', $attributes);
 
-        $defaultImage = $firstImage ?? $this->defaultImage;
+        $defaultImage = $this->imageCandidates[0]['image'] ?? $this->defaultImage;
         foreach ($attributes as $attribute => $value) {
             $defaultImage = $defaultImage->setAttribute($attribute, $value);
         }

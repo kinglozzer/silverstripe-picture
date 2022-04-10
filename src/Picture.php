@@ -6,32 +6,39 @@ use Exception;
 use SilverStripe\Assets\Image;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\FieldType\DBHTMLText;
-use SilverStripe\View\ArrayData;
 use SilverStripe\View\ViewableData;
 
 class Picture extends ViewableData
 {
+    /**
+     * A config array of available styles to be called in templates
+     */
     private static array $styles = [];
 
-    private static string $method = '';
-
-    private static array $densities = [];
-
+    /**
+     * The underlying Silverstripe image
+     */
     protected Image $image;
 
+    /**
+     * The requested picture style
+     */
     protected string $style;
 
+    /**
+     * The config settings for the requested picture style
+     */
     protected ?array $styleConfig;
 
     public function __construct(Image $image, string $style)
     {
+        parent::__construct();
+
         $this->image = $image;
         $this->style = $style;
+
         $styles = array_change_key_case($this->config()->get('styles'), CASE_LOWER);
-        $this->styleConfig = $styles[$this->style] ?? null;
-        if (!$this->styleConfig) {
-            throw new Exception("Style “{$this->style}” not found");
-        }
+        $this->styleConfig = $styles[$this->style];
     }
 
     public function forTemplate(): DBHTMLText
@@ -44,6 +51,9 @@ class Picture extends ViewableData
         return $this->image;
     }
 
+    /**
+     * @throws Exception
+     */
     public function getDefaultImage(): Img
     {
         $defaultConfig = $this->styleConfig['default'] ?? null;
@@ -54,31 +64,9 @@ class Picture extends ViewableData
         return Img::create($this->image, $defaultConfig);
     }
 
-    public function getDefault(): ArrayData
-    {
-        $defaultConfig = $this->styleConfig['default'] ?? null;
-        if (!$defaultConfig) {
-            throw new Exception("No default config set for style “{$this->style}”");
-        }
-
-        $srcsetUrls = $this->getSrcsets($defaultConfig);
-        $srcsets = [];
-        foreach ($srcsetUrls as $srcsetUrl) {
-            /** @var Image $image */
-            $image = $srcsetUrl['image'];
-            $srcset = $image->getURL();
-            if ($srcsetUrl['descriptor']) {
-                $srcset = "{$srcset} {$srcsetUrl['descriptor']}";
-            }
-            $srcsets[] = $srcset;
-        }
-
-        return ArrayData::create([
-            'Image' => $srcsetUrls[0]['image'],
-            'Srcset' => implode(', ', $srcsets)
-        ]);
-    }
-
+    /**
+     * @throws Exception
+     */
     public function getSources(): ArrayList
     {
         $sourcesConfig = $this->styleConfig['sources'] ?? [];
@@ -93,27 +81,5 @@ class Picture extends ViewableData
         }
 
         return $sources;
-    }
-
-    protected function getSrcsets($config): array
-    {
-        $srcsets = [];
-        foreach ($config as $srcsetConfig) {
-            $manipulations = $srcsetConfig['manipulations'] ?? [$srcsetConfig];
-            $descriptor = $srcsetConfig['descriptor'] ?? '';
-            $image = $this->image;
-            foreach ($manipulations as $manipulation) {
-                $method = $manipulation['method'];
-                $arguments = $manipulation['arguments'];
-                $image = $image->$method(...$arguments);
-            }
-
-            $srcsets[] = [
-                'image' => $image,
-                'descriptor' => $descriptor
-            ];
-        }
-
-        return $srcsets;
     }
 }
