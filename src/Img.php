@@ -3,6 +3,7 @@
 namespace Kinglozzer\SilverstripePicture;
 
 use SilverStripe\Assets\Image;
+use SilverStripe\View\HTML;
 use SilverStripe\View\ViewableData;
 
 class Img extends ViewableData
@@ -44,22 +45,42 @@ class Img extends ViewableData
         return $this->__srcsetProviderCall($method, $arguments);
     }
 
+    protected function getDefaultAttributes(): array
+    {
+        $defaultImage = $this->imageCandidates[0]['image'] ?? $this->defaultImage;
+
+        $attributes = [
+            'alt' => $defaultImage->getTitle(),
+            'src' => $defaultImage->getURL(),
+            'srcset' => $this->getImageCandidatesString()
+        ];
+
+        if ($this->sourceImage->IsLazyLoaded()) {
+            $attributes['loading'] = 'lazy';
+        }
+
+        $this->extend('updateDefaultAttributes', $attributes);
+
+        return $attributes;
+    }
+
     /**
      * For the default <img> tag, we re-use the existing Silverstripe Image object and inject a srcset attribute
      */
     public function forTemplate(): string
     {
-        $attributes = [
-            'srcset' => $this->getImageCandidatesString()
-        ];
+        $attributes = $this->getDefaultAttributes();
+
+        $defaultImage = $this->imageCandidates[0]['image'] ?? $this->defaultImage;
+        if (!array_key_exists('width', $attributes)) {
+            $attributes['width'] = $defaultImage->getWidth();
+        }
+        if (!array_key_exists('height', $attributes)) {
+            $attributes['height'] = $defaultImage->getHeight();
+        }
 
         $this->extend('updateAttributes', $attributes);
 
-        $defaultImage = $this->imageCandidates[0]['image'] ?? $this->defaultImage;
-        foreach ($attributes as $attribute => $value) {
-            $defaultImage = $defaultImage->setAttribute($attribute, $value);
-        }
-
-        return $defaultImage->forTemplate();
+        return HTML::createTag('img', $attributes);
     }
 }
