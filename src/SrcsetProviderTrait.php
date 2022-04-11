@@ -93,6 +93,10 @@ trait SrcsetProviderTrait
         foreach ($this->imageCandidates as &$imageCandidate) {
             /** @var Image $image */
             $image = $imageCandidate['image'];
+            if (!$image) {
+                continue;
+            }
+
             $imageCandidate['image'] = $image->$method(...$arguments);
             $imageCandidate['manipulations'][] = [
                 'method' => $method,
@@ -110,6 +114,10 @@ trait SrcsetProviderTrait
         foreach ($this->imageCandidates as $imageCandidate) {
             /** @var Image $image */
             $image = $imageCandidate['image'];
+            if (!$image) {
+                continue;
+            }
+
             $srcsetCandidate = $image->getUrl();
             if ($imageCandidate['descriptor']) {
                 $srcsetCandidate = "{$srcsetCandidate} {$imageCandidate['descriptor']}";
