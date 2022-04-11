@@ -69,12 +69,12 @@ class Picture extends ViewableData
      */
     public function getSources(): ArrayList
     {
+        $sources = ArrayList::create();
         $sourcesConfig = $this->styleConfig['sources'] ?? [];
         if (empty($sourcesConfig)) {
-            throw new Exception("No sources config set for style “{$this->style}”");
+            return $sources;
         }
 
-        $sources = ArrayList::create();
         foreach ($sourcesConfig as $media => $sourceConfig) {
             $source = Source::create($this->image, $media, $sourceConfig);
             $sources->push($source);
