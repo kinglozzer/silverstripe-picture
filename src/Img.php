@@ -50,7 +50,7 @@ class Img extends ViewableData
         $defaultImage = $this->imageCandidates[0]['image'] ?? $this->defaultImage;
 
         $attributes = [
-            'alt' => $defaultImage->getTitle(),
+            'alt' => $this->sourceImage->getTitle(),
             'src' => $defaultImage->getURL(),
             'srcset' => $this->getImageCandidatesString()
         ];
