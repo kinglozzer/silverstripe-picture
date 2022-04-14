@@ -36,8 +36,9 @@ trait SrcsetProviderTrait
      */
     public function __call($method, $arguments)
     {
-        $this->manipulateSrcsetImageCandidates($method, $arguments);
-        return $this;
+        $clone = clone $this;
+        $clone->manipulateSrcsetImageCandidates($method, $arguments);
+        return $clone;
     }
 
     public function getSourceImage(): Image

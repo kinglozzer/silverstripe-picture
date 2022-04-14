@@ -36,13 +36,14 @@ class Img extends ViewableData
      */
     public function __call($method, $arguments)
     {
-        $this->defaultImage = $this->defaultImage->$method(...$arguments);
-        $this->defaultImageManipulations[] = [
+        $clone = $this->__srcsetProviderCall($method, $arguments);
+        $clone->defaultImage = $clone->defaultImage->$method(...$arguments);
+        $clone->defaultImageManipulations[] = [
             'method' => $method,
             'arguments' => $arguments
         ];
 
-        return $this->__srcsetProviderCall($method, $arguments);
+        return $clone;
     }
 
     protected function getDefaultAttributes(): array
