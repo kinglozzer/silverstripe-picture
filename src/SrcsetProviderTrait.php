@@ -109,7 +109,7 @@ trait SrcsetProviderTrait
     /**
      * Returns a srcset attribute value - a comma-separated list of image candidates & descriptors
      */
-    protected function getImageCandidatesString(): string
+    public function getImageCandidatesString(): string
     {
         $srcsetCandidates = [];
         foreach ($this->imageCandidates as $imageCandidate) {

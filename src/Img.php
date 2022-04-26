@@ -86,6 +86,10 @@ class Img extends ViewableData
             return '';
         }
 
-        return HTML::createTag('img', $attributes);
+        $html = HTML::createTag('img', $attributes);
+
+        $this->extend('updateForTemplateHtml', $html, $attributes);
+
+        return $html;
     }
 }

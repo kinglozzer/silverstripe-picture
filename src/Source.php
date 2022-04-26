@@ -37,6 +37,11 @@ class Source extends ViewableData
         ];
 
         $this->extend('updateAttributes', $attributes);
-        return HTML::createTag('source', $attributes);
+
+        $html = HTML::createTag('source', $attributes);
+
+        $this->extend('updateForTemplateHtml', $html, $attributes);
+
+        return $html;
     }
 }
