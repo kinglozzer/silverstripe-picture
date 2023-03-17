@@ -111,6 +111,8 @@ trait SrcsetProviderTrait
      */
     public function getImageCandidatesString(): string
     {
+        $this->extend('onBeforeGetImageCandidatesString');
+
         $srcsetCandidates = [];
         foreach ($this->imageCandidates as $imageCandidate) {
             /** @var Image $image */
@@ -125,6 +127,8 @@ trait SrcsetProviderTrait
             }
             $srcsetCandidates[] = $srcsetCandidate;
         }
+
+        $this->extend('onAfterGetImageCandidatesString', $srcsetCandidates);
 
         return implode(', ', $srcsetCandidates);
     }
