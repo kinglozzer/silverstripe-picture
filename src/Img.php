@@ -3,6 +3,7 @@
 namespace Kinglozzer\SilverstripePicture;
 
 use SilverStripe\Assets\Image;
+use SilverStripe\Assets\Storage\AssetContainer;
 use SilverStripe\View\HTML;
 use SilverStripe\View\ViewableData;
 
@@ -69,7 +70,7 @@ class Img extends ViewableData
         return $this->defaultImage;
     }
 
-    public function getImageForSrc(): Image
+    public function getImageForSrc(): AssetContainer
     {
         return $this->imageCandidates[0]['image'] ?? $this->getDefaultImage();
     }
