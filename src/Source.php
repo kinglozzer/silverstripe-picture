@@ -26,6 +26,8 @@ class Source extends ViewableData
 
     public function forTemplate(): string
     {
+        $this->extend('onBeforeRender');
+
         $candidates = $this->imageCandidates;
         $lastImageCandidate = array_pop($candidates);
         $lastImage = $lastImageCandidate['image'] ?? $this->sourceImage;

@@ -48,11 +48,10 @@ class Img extends ViewableData
 
     protected function getDefaultAttributes(): array
     {
-        $defaultImage = $this->imageCandidates[0]['image'] ?? $this->defaultImage;
-
+        $imageForSrc = $this->getImageForSrc();
         $attributes = [
             'alt' => $this->sourceImage->getTitle(),
-            'src' => $defaultImage->getURL(),
+            'src' => $imageForSrc->getURL(),
             'srcset' => $this->getImageCandidatesString()
         ];
 
@@ -65,19 +64,31 @@ class Img extends ViewableData
         return $attributes;
     }
 
+    public function getDefaultImage(): Image
+    {
+        return $this->defaultImage;
+    }
+
+    public function getImageForSrc(): Image
+    {
+        return $this->imageCandidates[0]['image'] ?? $this->getDefaultImage();
+    }
+
     /**
      * For the default <img> tag, we re-use the existing Silverstripe Image object and inject a srcset attribute
      */
     public function forTemplate(): string
     {
+        $this->extend('onBeforeRender');
+
         $attributes = $this->getDefaultAttributes();
 
-        $defaultImage = $this->imageCandidates[0]['image'] ?? $this->defaultImage;
+        $imageForSrc = $this->getImageForSrc();
         if (!array_key_exists('width', $attributes)) {
-            $attributes['width'] = $defaultImage->getWidth();
+            $attributes['width'] = $imageForSrc->getWidth();
         }
         if (!array_key_exists('height', $attributes)) {
-            $attributes['height'] = $defaultImage->getHeight();
+            $attributes['height'] = $imageForSrc->getHeight();
         }
 
         $this->extend('updateAttributes', $attributes);
