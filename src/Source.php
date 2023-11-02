@@ -29,13 +29,17 @@ class Source extends ViewableData
         $this->extend('onBeforeRender');
 
         $candidates = $this->imageCandidates;
-        $lastImageCandidate = array_pop($candidates);
+        $lastImageCandidate = end($candidates);
+        $firstImageCandidate = reset($candidates);
         $lastImage = $lastImageCandidate['image'] ?? $this->sourceImage;
+        $firstImage = $firstImageCandidate['image'] ?? $this->sourceImage;
 
         $attributes = [
             'media' => $this->media,
             'srcset' => $this->getImageCandidatesString(),
-            'type' => $lastImage->getMimeType()
+            'type' => $lastImage->getMimeType(),
+            'width' => $firstImage->getWidth(),
+            'height' => $firstImage->getHeight(),
         ];
 
         $this->extend('updateAttributes', $attributes);
